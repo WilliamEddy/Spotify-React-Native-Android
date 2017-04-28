@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 
 import com.android.build.OutputFile
+import com.android.build.gradle.internal.pipeline.TransformTask
 
 /**
  * The react.gradle file registers a task for each build variant (e.g. bundleDebugJsAndAssets
@@ -146,4 +147,16 @@ dependencies {
 task copyDownloadableDepsToLibs(type: Copy) {
     from configurations.compile
     into 'libs'
+}
+
+// TODO: Re-evaluate the code under this. Make sure that it doesn't break anything
+def deleteDuplicateJniFiles() {
+    def files = fileTree("${buildDir}/intermediates/exploded-aar/com.facebook.react/react-native/0.43.4/jni/") {
+        include "**/libgnustl_shared.so"
+    }
+    files.each { it.delete() }
+}
+
+tasks.withType(TransformTask) { pkgTask ->
+    pkgTask.doFirst { deleteDuplicateJniFiles() }
 }
